@@ -9611,6 +9611,10 @@
           },
           "storageClassName": {
             "type": "string"
+          },
+          "virtualSize": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
