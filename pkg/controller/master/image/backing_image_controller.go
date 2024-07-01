@@ -64,7 +64,13 @@ func (h *backingImageHandler) OnChanged(_ string, backingImage *lhv1beta2.Backin
 		if status.State == lhv1beta2.BackingImageStateFailed {
 			toUpdate = handleFail(toUpdate, condition.Cond(harvesterv1beta1.ImageImported), fmt.Errorf(status.Message))
 			toUpdate.Status.Progress = status.Progress
-		} else if status.State == lhv1beta2.BackingImageStateReady || status.State == lhv1beta2.BackingImageStateReadyForTransfer {
+		} else if status.State == lhv1beta2.BackingImageStateReady {
+			// We can't set ImageImported to True until we know the VirtualSize,
+			// which will happen only after stats.State == lhv1beta2.BackingImageStateReady
+			// (it's not there yet for lhv1beta2.BackingImageStateReadyForTransfer)
+			harvesterv1beta1.ImageImported.True(toUpdate)
+			harvesterv1beta1.ImageImported.Reason(toUpdate, "Imported")
+			harvesterv1beta1.ImageImported.Message(toUpdate, status.Message)
 			// Clear the ImageRetryLimitExceeded reason and message to prevent the error message
 			// from lingering in the Harvester dashboard after multiple image import retries
 			// have failed but eventually succeeded.
@@ -74,13 +80,6 @@ func (h *backingImageHandler) OnChanged(_ string, backingImage *lhv1beta2.Backin
 			toUpdate.Status.Progress = status.Progress
 			toUpdate.Status.Size = backingImage.Status.Size
 			toUpdate.Status.VirtualSize = backingImage.Status.VirtualSize
-			if toUpdate.Status.VirtualSize > 0 {
-				// We can't set ImageImported to True until we know the VirtualSize,
-				// which may happen one update after the image becomes ready.
-				harvesterv1beta1.ImageImported.True(toUpdate)
-				harvesterv1beta1.ImageImported.Reason(toUpdate, "Imported")
-				harvesterv1beta1.ImageImported.Message(toUpdate, status.Message)
-			}
 		} else if status.Progress != toUpdate.Status.Progress {
 			harvesterv1beta1.ImageImported.Unknown(toUpdate)
 			harvesterv1beta1.ImageImported.Reason(toUpdate, "Importing")
