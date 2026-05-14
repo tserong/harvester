@@ -286,6 +286,10 @@ type UpgradeConfig struct {
 	NodeUpgradeOption *NodeUpgradeOption `json:"nodeUpgradeOption,omitempty"`
 }
 
+type LonghornConfig struct {
+	// TODO: fill this in
+}
+
 func DecodeConfig[T any](value string) (*T, error) {
 	target := new(T)
 

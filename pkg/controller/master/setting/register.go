@@ -97,7 +97,7 @@ func Register(ctx context.Context, management *config.Management, options config
 		harvSettings.SSLParametersName:                           controller.syncSSLParameters,
 		harvSettings.ContainerdRegistrySettingName:               controller.syncContainerdRegistry,
 		harvSettings.NTPServersSettingName:                       controller.syncNodeConfig,
-		harvSettings.LonghornV2DataEngineSettingName:             controller.syncNodeConfig,
+		harvSettings.LonghornConfigSettingName:                   controller.syncNodeConfig,
 		harvSettings.LHIMResourcesSettingName:                    controller.syncLHIMResources,
 		harvSettings.AutoRotateRKE2CertsSettingName:              controller.syncAutoRotateRKE2Certs,
 		harvSettings.KubeconfigDefaultTokenTTLMinutesSettingName: controller.syncKubeconfigTTL,

@@ -38,10 +38,19 @@ func (h *Handler) syncNodeConfig(setting *harvesterv1.Setting) error {
 		h.nodeClient.Enqueue(node.Name)
 	}
 
-	// Enabling (or disabling) the Longhorn v2 data engine means we also need
-	// to set lhs/v2-data-engine, so Loghorn can pick up the change.
-	if setting.Name == harvSettings.LonghornV2DataEngineSettingName {
-		enableV2DataEngine := setting.Value == "true"
+	// Changes to LH config need to be pushed through as LH settings
+	if setting.Name == harvSettings.LonghornConfigSettingName {
+		// TODO: this is just a draft and won't work right now, it's just to show the idea
+		longhornConfig = settings.DecodeConfig[setting.Value]
+
+		dataEngineHugepageEnabled := longhornConfig.DataEngineHugepageEnabled == "true"
+		lhsDataEngineHugepageEnabled, err := h.longhornSettingCache.Get(util.LonghornSystemNamespaceName, string(SettingNameDataEngineHugepageEnabled))
+		// TODO: copy the LH steting, set the value, reflect.DeepEqual, update, etc. as below for v2 data engine enablement
+
+		// TODO: repeat for each of the other LH config settings
+		// (surely there's a better way to do this, can we iterate somehow?)
+
+		enableV2DataEngine := longhornConfig.EnableV2DataEngine == "true"
 		lhsV2DataEngine, err := h.longhornSettingCache.Get(util.LonghornSystemNamespaceName, string(longhorntypes.SettingNameV2DataEngine))
 		if err != nil {
 			return err
@@ -120,8 +129,11 @@ func (h *Handler) nodeOnChanged(_ string, node *corev1.Node) (*corev1.Node, erro
 				NTPConfig: &nodev1.NTPConfig{
 					NTPServers: ntpServers,
 				},
+				// TODO: this won't work without also updating node-manager to add the extra fields
 				LonghornConfig: &nodev1.LonghornConfig{
-					EnableV2DataEngine: enableV2DataEngine,
+					EnableV2DataEngine:        enableV2DataEngine,
+					DataEngineHugepageEnabled: dataEngineHugepageEnabled,	// TODO: need to actually get this value
+					DataEngineMemoryLimit:     dataEngineMemoryLimit,	    // TODO: need to actually get this value
 				},
 			},
 		})
